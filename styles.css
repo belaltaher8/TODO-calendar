@@ -119,16 +119,24 @@ h1 {
 }
 
 .task-preview {
-    font-size: 0.85em;
+    font-size: 0.75em;
     color: #666;
-    margin-top: 5px;
-    padding: 5px;
+    margin-top: 3px;
+    padding: 3px 5px;
     background: white;
     border-radius: 4px;
     border-left: 3px solid #667eea;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.task-more {
+    font-size: 0.85em;
+    color: #667eea;
+    text-align: center;
+    font-weight: bold;
+    margin-top: 2px;
 }
 
 .task-count {
@@ -258,6 +266,44 @@ h1 {
 .hour-input:focus {
     outline: none;
     border-color: #667eea;
+}
+
+.input-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.input-row .hour-input {
+    flex: 1;
+}
+
+.duration-select {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.9em;
+    font-family: inherit;
+    background: white;
+    cursor: pointer;
+    min-width: 70px;
+    transition: border-color 0.3s;
+}
+
+.duration-select:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.hour-slot.multi-hour {
+    background: linear-gradient(135deg, #e8ecff 0%, #f0e8ff 100%);
+    border-color: #667eea;
+}
+
+.duration-indicator {
+    font-size: 0.8em;
+    color: #999;
+    font-weight: normal;
 }
 
 .hour-task {
