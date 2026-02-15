@@ -2,11 +2,41 @@
 const CalendarApp = {
     displayDate: new Date(),
     taskData: {},
+    categories: {},
+    defaultColors: ['#667eea', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6'],
     
     initialize() {
         this.taskData = this.retrieveStoredTasks();
+        this.categories = this.retrieveCategories();
+        this.ensureDefaultCategories();
         this.buildCalendarView();
         this.setupInteractions();
+    },
+    
+    retrieveCategories() {
+        const stored = localStorage.getItem('calendarCategories');
+        return stored ? JSON.parse(stored) : {};
+    },
+    
+    persistCategories() {
+        localStorage.setItem('calendarCategories', JSON.stringify(this.categories));
+    },
+    
+    ensureDefaultCategories() {
+        if (Object.keys(this.categories).length === 0) {
+            this.categories = {
+                'work': { name: 'Work', color: '#667eea' },
+                'personal': { name: 'Personal', color: '#2ecc71' },
+                'health': { name: 'Health', color: '#e74c3c' },
+                'errands': { name: 'Errands', color: '#f39c12' },
+                'social': { name: 'Social', color: '#9b59b6' }
+            };
+            this.persistCategories();
+        }
+    },
+    
+    getCategoryColor(categoryId) {
+        return this.categories[categoryId]?.color || '#667eea';
     },
     
     retrieveStoredTasks() {
@@ -29,13 +59,13 @@ const CalendarApp = {
         return this.taskData[dateKey] || {};
     },
     
-    updateHourTask(dateKey, hourNum, taskText, duration = 1) {
+    updateHourTask(dateKey, hourNum, taskText, duration = 1, category = null) {
         if (!this.taskData[dateKey]) {
             this.taskData[dateKey] = {};
         }
-        // Store task as object with text and duration
+        // Store task as object with text, duration, and category
         if (taskText && taskText.trim()) {
-            this.taskData[dateKey][hourNum] = { text: taskText, duration: duration };
+            this.taskData[dateKey][hourNum] = { text: taskText, duration: duration, category: category };
         } else {
             this.taskData[dateKey][hourNum] = null;
         }
@@ -47,7 +77,7 @@ const CalendarApp = {
         if (!hourData) return null;
         // Handle legacy string format
         if (typeof hourData === 'string') {
-            return { text: hourData, duration: 1 };
+            return { text: hourData, duration: 1, category: null };
         }
         return hourData;
     },
@@ -157,6 +187,10 @@ const CalendarApp = {
                 const previewDiv = document.createElement('div');
                 previewDiv.className = 'task-preview';
                 previewDiv.textContent = typeof task === 'string' ? task : task.text;
+                const taskCategory = typeof task === 'string' ? null : task.category;
+                if (taskCategory && this.categories[taskCategory]) {
+                    previewDiv.style.borderLeftColor = this.categories[taskCategory].color;
+                }
                 cell.appendChild(previewDiv);
             });
             
@@ -229,6 +263,29 @@ const CalendarApp = {
             const inputRow = document.createElement('div');
             inputRow.className = 'input-row';
             
+            const categorySelect = document.createElement('select');
+            categorySelect.className = 'category-select';
+            const noneOption = document.createElement('option');
+            noneOption.value = '';
+            noneOption.textContent = 'No category';
+            categorySelect.appendChild(noneOption);
+            Object.entries(this.categories).forEach(([id, cat]) => {
+                const option = document.createElement('option');
+                option.value = id;
+                option.textContent = cat.name;
+                option.style.color = cat.color;
+                if (id === task?.category) {
+                    option.selected = true;
+                }
+                categorySelect.appendChild(option);
+            });
+            
+            // Apply color indicator to slot based on category
+            if (task?.category && this.categories[task.category]) {
+                slot.style.borderLeftColor = this.categories[task.category].color;
+                slot.style.borderLeftWidth = '4px';
+            }
+            
             const textField = document.createElement('input');
             textField.type = 'text';
             textField.className = 'hour-input';
@@ -250,14 +307,17 @@ const CalendarApp = {
             
             const saveTask = () => {
                 const dur = parseInt(durationSelect.value, 10);
-                this.updateHourTask(dateKey, h, textField.value, dur);
+                const cat = categorySelect.value || null;
+                this.updateHourTask(dateKey, h, textField.value, dur, cat);
                 this.buildCalendarView();
                 this.showDayDetails(dateObj);
             };
             
             textField.addEventListener('change', saveTask);
             durationSelect.addEventListener('change', saveTask);
+            categorySelect.addEventListener('change', saveTask);
             
+            inputRow.appendChild(categorySelect);
             inputRow.appendChild(textField);
             inputRow.appendChild(durationSelect);
             taskArea.appendChild(inputRow);
@@ -267,6 +327,69 @@ const CalendarApp = {
         }
         
         overlay.classList.add('active');
+    },
+    
+    showCategoryManager() {
+        const modal = document.getElementById('categoryModal');
+        this.renderCategoryList();
+        modal.classList.add('active');
+    },
+    
+    hideCategoryManager() {
+        document.getElementById('categoryModal').classList.remove('active');
+    },
+    
+    renderCategoryList() {
+        const list = document.getElementById('categoryList');
+        list.innerHTML = '';
+        
+        Object.entries(this.categories).forEach(([id, cat]) => {
+            const item = document.createElement('div');
+            item.className = 'category-item';
+            
+            const colorInput = document.createElement('input');
+            colorInput.type = 'color';
+            colorInput.className = 'category-color-picker';
+            colorInput.value = cat.color;
+            colorInput.addEventListener('change', () => {
+                this.categories[id].color = colorInput.value;
+                this.persistCategories();
+            });
+            
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.className = 'category-name-input';
+            nameInput.value = cat.name;
+            nameInput.addEventListener('change', () => {
+                this.categories[id].name = nameInput.value;
+                this.persistCategories();
+            });
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'category-delete-btn';
+            deleteBtn.textContent = '×';
+            deleteBtn.addEventListener('click', () => {
+                delete this.categories[id];
+                this.persistCategories();
+                this.renderCategoryList();
+            });
+            
+            item.appendChild(colorInput);
+            item.appendChild(nameInput);
+            item.appendChild(deleteBtn);
+            list.appendChild(item);
+        });
+    },
+    
+    addNewCategory() {
+        const id = 'cat_' + Date.now();
+        const colorIndex = Object.keys(this.categories).length % this.defaultColors.length;
+        this.categories[id] = {
+            name: 'New Category',
+            color: this.defaultColors[colorIndex]
+        };
+        this.persistCategories();
+        this.renderCategoryList();
     },
     
     hideDayDetails() {
@@ -290,6 +413,12 @@ const CalendarApp = {
             () => this.navigateNextMonth());
         document.getElementById('closeModal').addEventListener('click', 
             () => this.hideDayDetails());
+        document.getElementById('settingsBtn').addEventListener('click',
+            () => this.showCategoryManager());
+        document.getElementById('closeCategoryModal').addEventListener('click',
+            () => this.hideCategoryManager());
+        document.getElementById('addCategoryBtn').addEventListener('click',
+            () => this.addNewCategory());
         
         document.getElementById('dayModal').addEventListener('click', (evt) => {
             if (evt.target.id === 'dayModal') {
@@ -297,9 +426,16 @@ const CalendarApp = {
             }
         });
         
+        document.getElementById('categoryModal').addEventListener('click', (evt) => {
+            if (evt.target.id === 'categoryModal') {
+                this.hideCategoryManager();
+            }
+        });
+        
         document.addEventListener('keydown', (evt) => {
             if (evt.key === 'Escape') {
                 this.hideDayDetails();
+                this.hideCategoryManager();
             }
         });
     }

@@ -14,6 +14,7 @@
                 <button id="prevMonth">←</button>
                 <h2 id="currentMonth"></h2>
                 <button id="nextMonth">→</button>
+                <button id="settingsBtn" class="settings-btn">⚙️</button>
             </div>
         </header>
 
@@ -28,6 +29,20 @@
                 </div>
                 <div class="modal-body">
                     <div id="hourlySchedule"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Manager Modal -->
+        <div id="categoryModal" class="modal">
+            <div class="modal-content category-modal-content">
+                <div class="modal-header">
+                    <h2>Manage Categories</h2>
+                    <button class="close-btn" id="closeCategoryModal">×</button>
+                </div>
+                <div class="modal-body">
+                    <div id="categoryList"></div>
+                    <button id="addCategoryBtn" class="add-category-btn">+ Add Category</button>
                 </div>
             </div>
         </div>
