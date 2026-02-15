@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TODO Calendar</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📅 TODO Calendar</h1>
+            <div class="month-nav">
+                <button id="prevMonth">←</button>
+                <h2 id="currentMonth"></h2>
+                <button id="nextMonth">→</button>
+            </div>
+        </header>
+
+        <div class="calendar-grid" id="calendar"></div>
+
+        <!-- Day Detail Modal -->
+        <div id="dayModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modalDate"></h2>
+                    <button class="close-btn" id="closeModal">×</button>
+                </div>
+                <div class="modal-body">
+                    <div id="hourlySchedule"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
